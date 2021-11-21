@@ -13,7 +13,19 @@ $runningVM = (Get-AzVM -ErrorAction Stop -ResourceGroupName $ResourceGroupName -
 
 foreach($vm in $runningVM){
     Log "The $VM has started the FSlogix installation"
-    Invoke-AzVMRunCommand -ResourceGroupName $ResourceGroupName -VMName $vm -CommandId 'RunPowerShellScript' -ScriptPath 'install_fxlogics.ps1' -AsJob
-    Log "The $VM has completed the FSlogix installation"
+    $job = Invoke-AzVMRunCommand -ErrorAction Stop -ResourceGroupName $ResourceGroupName -VMName $vm -CommandId 'RunPowerShellScript' -ScriptPath 'install_fxlogics.ps1' -AsJob
+
+    if ($job.value.Message -like '*error*') 
+    {  
+
+        Write-Output "Failed. An error occurred: `n $($job.value.Message)"
+        throw $($job.value.Message)        
+    }
+    else
+    {   
+        Log "The $VM has completed the FSlogix installation"
+        Write-Output "Success"
+    } 
+    
 }
 
